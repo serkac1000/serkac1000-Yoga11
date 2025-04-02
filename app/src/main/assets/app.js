@@ -1,0 +1,60 @@
+
+let isRunning = false;
+let poseDetector = null;
+let animationFrame = null;
+
+async function detectPose() {
+    if (!isRunning || !poseDetector) return;
+    
+    try {
+        const pose = await poseDetector.estimatePose();
+        if (pose && pose.poseProbabilities) {
+            document.getElementById('confidence1').textContent = Math.round(pose.poseProbabilities[0] * 100);
+            document.getElementById('confidence2').textContent = Math.round(pose.poseProbabilities[1] * 100);
+            document.getElementById('confidence3').textContent = Math.round(pose.poseProbabilities[2] * 100);
+        }
+    } catch (error) {
+        console.error('Error during pose detection:', error);
+    }
+    
+    animationFrame = requestAnimationFrame(detectPose);
+}
+
+document.getElementById('startBtn').addEventListener('click', async () => {
+    if (isRunning) return;
+    isRunning = true;
+    
+    try {
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/gIF64n3nR/';
+        console.log('Model URL:', modelURL);
+        
+        const video = document.getElementById('webcam');
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        
+        poseDetector = await window.teachablemachine.pose.createTeachable(
+            video,
+            modelURL + 'model.json',
+            modelURL + 'metadata.json'
+        );
+        
+        detectPose();
+    } catch (error) {
+        console.error('Failed to start:', error);
+    }
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+    isRunning = false;
+    if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+    }
+    if (poseDetector) {
+        poseDetector.dispose();
+        poseDetector = null;
+    }
+    const video = document.getElementById('webcam');
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+    }
+});
