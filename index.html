@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoga Pose Recognition</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="recognition-section">
+            <div class="camera-view">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="canvas"></canvas>
+                <div id="modelIndicator" class="model-indicator">Demo Mode</div>
+                <div class="confidence-overlay">
+                    <div>Pose 1: <span id="confidence1">0</span>%</div>
+                    <div>Pose 2: <span id="confidence2">0</span>%</div>
+                    <div>Pose 3: <span id="confidence3">0</span>%</div>
+                </div>
+<script>
+const ws = new WebSocket(`ws://${window.location.hostname}:5000`);
+let poseDetector;
+
+ws.onmessage = async (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'updateDisplay') {
+        // Update confidence percentages
+        for(let i = 0; i < 3; i++) {
+            const confidenceEl = document.getElementById(`confidence${i+1}`);
+            const percentage = Math.round((data.confidences[i] || 0) * 100);
+            confidenceEl.textContent = percentage;
+        }
+
+        // Update timer
+        document.querySelector('.timer').textContent = 
+            data.timer > 0 ? `Hold for ${data.timer} more seconds` : 'Move to next pose';
+    } else if (data.type === 'nextPose') {
+        // Update pose image and highlight
+        document.querySelector('.pose-display h3').textContent = data.pose;
+        document.getElementById('poseImage').src = 
+            `https://teachablemachine.withgoogle.com/models/gIF64n3nR/${data.pose.toLowerCase()}.jpg`;
+    }
+};
+
+async function detectPose() {
+    const video = document.getElementById('webcam');
+    if (!poseDetector) {
+        console.log('No pose detector available');
+        return;
+    }
+    if (!video.videoWidth || !video.videoHeight) {
+        console.log('Video not ready:', { width: video.videoWidth, height: video.videoHeight });
+        return;
+    }
+    try {
+        console.log('Estimating pose...');
+        const pose = await poseDetector.estimatePose(video);
+        if (pose && pose.poseProbabilities) {
+            ws.send(JSON.stringify({
+                type: 'poseDetection',
+                confidences: pose.poseProbabilities
+            }));
+        }
+    } catch (error) {
+        console.error('Error during pose detection:', error);
+    }
+    requestAnimationFrame(detectPose);
+}
+
+async function setupWebcam() {
+    const video = document.getElementById('webcam');
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: 640,
+                height: 480,
+                facingMode: 'user'
+            },
+            audio: false
+        });
+        video.srcObject = stream;
+        return new Promise((resolve) => {
+            video.onloadedmetadata = () => {
+                resolve(video);
+            };
+        });
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        throw error;
+    }
+}
+
+document.getElementById('startBtn').onclick = async () => {
+    try {
+        const modelIndicator = document.getElementById('modelIndicator');
+        modelIndicator.style.display = 'block';
+        modelIndicator.style.backgroundColor = 'rgba(255, 165, 0, 0.8)';
+        modelIndicator.textContent = 'Loading...';
+        
+        const video = await setupWebcam();
+        await new Promise(resolve => {
+            video.onloadeddata = resolve;
+        });
+
+        // Try loading custom model first
+        try {
+            const modelURL = 'https://teachablemachine.withgoogle.com/models/fS2swbVr5/model.json';
+            const metadataURL = 'https://teachablemachine.withgoogle.com/models/fS2swbVr5/metadata.json';
+
+            console.log('Model URL:', modelURL);
+            console.log('Metadata URL:', metadataURL);
+            
+            try {
+                console.log('Attempting to fetch model...');
+                const response = await fetch(modelURL);
+                console.log('Model fetch status:', response.status);
+                console.log('Model fetch headers:', Object.fromEntries(response.headers));
+                
+                if (!response.ok) {
+                    throw new Error(`Model fetch failed: ${response.status} ${response.statusText}`);
+                }
+                
+                const modelData = await response.json();
+                console.log('Model data loaded:', modelData);
+                
+                console.log('Loading pose detector...');
+                poseDetector = await window.teachablemachine.posenet.load(modelURL, metadataURL);
+                console.log('Pose detector loaded successfully');
+                console.log('Custom model loaded successfully');
+                modelIndicator.style.backgroundColor = 'rgba(75, 181, 67, 0.8)';
+                modelIndicator.textContent = 'Custom Model';
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        poseDetector = await window.teachablemachine.posenet.load(modelURL, metadataURL);
+        console.log('Model loaded successfully');
+        modelIndicator.style.backgroundColor = 'rgba(75, 181, 67, 0.8)';
+        modelIndicator.textContent = 'Custom Model';
+        await detectPose();
+    } catch (error) {
+        console.error('Failed to load custom model:', error);
+            // Fall back to demo model
+            console.log('Loading demo model...');
+            const demoModelURL = 'https://teachablemachine.withgoogle.com/models/fS2swbVr5/model.json';
+            const demoMetadataURL = 'https://teachablemachine.withgoogle.com/models/fS2swbVr5/metadata.json';
+
+            modelIndicator.style.backgroundColor = 'rgba(255, 99, 71, 0.8)';
+            modelIndicator.textContent = 'Demo Mode';
+
+            poseDetector = await window.teachablemachine.posenet.load(demoModelURL, demoMetadataURL);
+            console.log('Demo model loaded successfully');
+            await detectPose();
+        } catch (demoError) {
+            console.error('Failed to load demo model:', demoError);
+            modelIndicator.textContent = 'Error: No Model Available';
+            modelIndicator.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+        }
+    }
+};
+</script>
+            </div>
+            <button id="startBtn" class="primary-button">Start Recognition</button>
+            <button id="stopBtn" class="secondary-button">Stop</button>
+        </div>
+
+        <div class="reference-section">
+            <h2>Current Expected Pose</h2>
+            <div class="pose-display">
+                <img id="poseImage" src="https://teachablemachine.withgoogle.com/models/fS2swbVr5/pose1.jpg" alt="Reference Pose">
+                <h3>Pose 1</h3>
+                <div class="timer">Hold this pose until detected</div>
+            </div>
+            <div class="pose-sequence">
+                <h3>Pose Sequence</h3>
+                <div class="sequence-images">
+                    <img src="https://teachablemachine.withgoogle.com/models/gIF64n3nR/pose1.jpg" alt="Pose 1" class="active">
+                    <img src="https://teachablemachine.withgoogle.com/models/gIF64n3nR/pose2.jpg" alt="Pose 2">
+                    <img src="https://teachablemachine.withgoogle.com/models/gIF64n3nR/pose3.jpg" alt="Pose 3">
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="dist/index.js"></script>
+</body>
+</html>

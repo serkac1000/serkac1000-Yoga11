@@ -1,0 +1,144 @@
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 30px;
+}
+
+.recognition-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.camera-view {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#webcam, #canvas {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.model-indicator {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 0, 0, 0.9);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.confidence-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.primary-button, .secondary-button {
+    padding: 12px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.primary-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.secondary-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.reference-section {
+    flex: 1;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reference-section h2 {
+    margin: 0 0 20px 0;
+    color: #333;
+}
+
+.pose-display {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.pose-display img {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.pose-display h3 {
+    margin: 10px 0;
+    color: #333;
+}
+
+.timer {
+    font-size: 16px;
+    color: #666;
+}
+
+.pose-sequence {
+    margin-top: 30px;
+}
+
+.sequence-images {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.sequence-images img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.sequence-images img.active {
+    opacity: 1;
+    border: 2px solid #4CAF50;
+}

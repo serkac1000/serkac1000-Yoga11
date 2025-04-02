@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoga Pose Recognition</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="recognition-section">
+            <div class="camera-view">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="canvas"></canvas>
+                <div id="modelIndicator" class="model-indicator">Demo Mode</div>
+                <div class="confidence-overlay">
+                    <div>Pose 1: <span id="confidence1">0</span>%</div>
+                    <div>Pose 2: <span id="confidence2">0</span>%</div>
+                    <div>Pose 3: <span id="confidence3">0</span>%</div>
+                </div>
+            </div>
+            <button id="startBtn" class="primary-button">Start Recognition</button>
+            <button id="stopBtn" class="secondary-button">Stop</button>
+        </div>
+        <div class="reference-section">
+            <h2>Current Expected Pose</h2>
+            <div class="pose-display">
+                <img id="poseImage" src="https://teachablemachine.withgoogle.com/models/fS2swbVr5/pose1.jpg" alt="Reference Pose">
+                <h3>Pose 1</h3>
+                <div class="timer">Hold this pose until detected</div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
