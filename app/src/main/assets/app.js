@@ -1,7 +1,7 @@
 
-let poseDetector;
+let poseDetector = null;
 let isRunning = false;
-let animationFrame;
+let animationFrame = null;
 
 async function detectPose() {
     if (!isRunning || !poseDetector) return;
@@ -26,20 +26,31 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     
     try {
         const video = document.getElementById('webcam');
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: {
+                facingMode: 'user',
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+            }
+        });
         video.srcObject = stream;
         
         const modelURL = 'https://teachablemachine.withgoogle.com/models/gIF64n3nR/';
+        const modelPath = modelURL + 'model.json';
+        const metadataPath = modelURL + 'metadata.json';
+        
         poseDetector = await window.teachablemachine.pose.createTeachable(
             video,
-            modelURL + 'model.json',
-            modelURL + 'metadata.json'
+            modelPath,
+            metadataPath
         );
         
+        document.getElementById('modelIndicator').textContent = 'Model Ready';
         isRunning = true;
         detectPose();
     } catch (error) {
         console.error('Failed to start:', error);
+        document.getElementById('modelIndicator').textContent = 'Error: ' + error.message;
     }
 });
 
@@ -56,4 +67,5 @@ document.getElementById('stopBtn').addEventListener('click', () => {
     if (video.srcObject) {
         video.srcObject.getTracks().forEach(track => track.stop());
     }
+    document.getElementById('modelIndicator').textContent = 'Stopped';
 });
