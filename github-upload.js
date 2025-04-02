@@ -19,7 +19,7 @@ async function uploadToGithub() {
     
     // Push to GitHub using token
     execSync(`git remote remove origin 2>/dev/null || true`, { stdio: 'inherit' });
-    execSync(`git remote add origin https://${token}@github.com/yourusername/Yoga11.git`, { stdio: 'inherit' });
+    execSync(`git remote add origin https://${token}@github.com/serkac1000/Yoga11.git`, { stdio: 'inherit' });
     execSync('git push -u origin main --force', { stdio: 'inherit' });
     
     console.log('Successfully uploaded to GitHub!');
