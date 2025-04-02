@@ -1,13 +1,14 @@
 
+let poseDetector;
 let isRunning = false;
-let poseDetector = null;
-let animationFrame = null;
+let animationFrame;
 
 async function detectPose() {
     if (!isRunning || !poseDetector) return;
     
     try {
-        const pose = await poseDetector.estimatePose();
+        const video = document.getElementById('webcam');
+        const pose = await poseDetector.estimatePose(video);
         if (pose && pose.poseProbabilities) {
             document.getElementById('confidence1').textContent = Math.round(pose.poseProbabilities[0] * 100);
             document.getElementById('confidence2').textContent = Math.round(pose.poseProbabilities[1] * 100);
@@ -22,22 +23,20 @@ async function detectPose() {
 
 document.getElementById('startBtn').addEventListener('click', async () => {
     if (isRunning) return;
-    isRunning = true;
     
     try {
-        const modelURL = 'https://teachablemachine.withgoogle.com/models/gIF64n3nR/';
-        console.log('Model URL:', modelURL);
-        
         const video = document.getElementById('webcam');
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
         
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/gIF64n3nR/';
         poseDetector = await window.teachablemachine.pose.createTeachable(
             video,
             modelURL + 'model.json',
             modelURL + 'metadata.json'
         );
         
+        isRunning = true;
         detectPose();
     } catch (error) {
         console.error('Failed to start:', error);
