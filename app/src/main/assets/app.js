@@ -36,21 +36,20 @@ document.getElementById('startBtn').addEventListener('click', async () => {
         video.srcObject = stream;
         
         const modelURL = 'https://teachablemachine.withgoogle.com/models/gIF64n3nR/';
-        const modelPath = modelURL + 'model.json';
-        const metadataPath = modelURL + 'metadata.json';
-        
         poseDetector = await window.teachablemachine.pose.createTeachable(
             video,
-            modelPath,
-            metadataPath
+            modelURL + 'model.json',
+            modelURL + 'metadata.json'
         );
         
         document.getElementById('modelIndicator').textContent = 'Model Ready';
+        document.getElementById('modelIndicator').style.backgroundColor = 'rgba(0, 255, 0, 0.8)';
         isRunning = true;
         detectPose();
     } catch (error) {
         console.error('Failed to start:', error);
         document.getElementById('modelIndicator').textContent = 'Error: ' + error.message;
+        document.getElementById('modelIndicator').style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
     }
 });
 
@@ -68,4 +67,5 @@ document.getElementById('stopBtn').addEventListener('click', () => {
         video.srcObject.getTracks().forEach(track => track.stop());
     }
     document.getElementById('modelIndicator').textContent = 'Stopped';
+    document.getElementById('modelIndicator').style.backgroundColor = 'rgba(255, 99, 71, 0.8)';
 });
