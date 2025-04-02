@@ -33,13 +33,21 @@ public class MainActivity extends AppCompatActivity {
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
+        webView.getSettings().setAllowFileAccess(true);
+        webView.getSettings().setAllowContentAccess(true);
+        
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
-            public void onPermissionRequest(PermissionRequest request) {
-                runOnUiThread(() -> request.grant(request.getResources()));
+            public void onPermissionRequest(final PermissionRequest request) {
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        request.grant(request.getResources());
+                    }
+                });
             }
         });
-        
+
         final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
             .build();
@@ -50,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
                 return assetLoader.shouldInterceptRequest(request.getUrl());
             }
         });
-        
+
         webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
     }
 
