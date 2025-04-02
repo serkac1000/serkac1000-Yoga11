@@ -23,22 +23,20 @@
 <script>
 const ws = new WebSocket(`ws://${window.location.hostname}:5000`);
 let poseDetector;
+let isRunning = false;
+let animationFrame;
 
 ws.onmessage = async (event) => {
     const data = JSON.parse(event.data);
     if (data.type === 'updateDisplay') {
-        // Update confidence percentages
         for(let i = 0; i < 3; i++) {
             const confidenceEl = document.getElementById(`confidence${i+1}`);
             const percentage = Math.round((data.confidences[i] || 0) * 100);
             confidenceEl.textContent = percentage;
         }
-
-        // Update timer
         document.querySelector('.timer').textContent = 
             data.timer > 0 ? `Hold for ${data.timer} more seconds` : 'Move to next pose';
     } else if (data.type === 'nextPose') {
-        // Update pose image and highlight
         document.querySelector('.pose-display h3').textContent = data.pose;
         document.getElementById('poseImage').src = 
             `https://teachablemachine.withgoogle.com/models/gIF64n3nR/${data.pose.toLowerCase()}.jpg`;
@@ -46,20 +44,68 @@ ws.onmessage = async (event) => {
 };
 
 async function detectPose() {
+    if (!isRunning) return;
+    
     const video = document.getElementById('webcam');
-    if (!poseDetector) {
-        console.log('No pose detector available');
+    if (!poseDetector || !video.videoWidth) {
+        animationFrame = requestAnimationFrame(detectPose);
         return;
     }
-    if (!video.videoWidth || !video.videoHeight) {
-        console.log('Video not ready:', { width: video.videoWidth, height: video.videoHeight });
-        return;
-    }
+
     try {
-        console.log('Estimating pose...');
         const pose = await poseDetector.estimatePose(video);
         if (pose && pose.poseProbabilities) {
             ws.send(JSON.stringify({
+                type: 'poseDetection',
+                confidences: Array.from(pose.poseProbabilities)
+            }));
+        }
+    } catch (error) {
+        console.error('Error during pose detection:', error);
+    }
+
+    animationFrame = requestAnimationFrame(detectPose);
+}
+
+document.getElementById('startBtn').addEventListener('click', async () => {
+    if (isRunning) return;
+    isRunning = true;
+    
+    try {
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/gIF64n3nR/';
+        console.log('Model URL updated to:', modelURL);
+        
+        const video = document.getElementById('webcam');
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        
+        poseDetector = await window.teachablemachine.pose.createTeachable(
+            video,
+            modelURL + 'model.json',
+            modelURL + 'metadata.json'
+        );
+        
+        detectPose();
+    } catch (error) {
+        console.error('Failed to start:', error);
+    }
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+    isRunning = false;
+    if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+    }
+    if (poseDetector) {
+        poseDetector.dispose();
+        poseDetector = null;
+    }
+    const video = document.getElementById('webcam');
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+    }
+});
+</script>ON.stringify({
                 type: 'poseDetection',
                 confidences: pose.poseProbabilities
             }));
