@@ -1,5 +1,5 @@
 
-let poseDetector = null;
+let poseDetector;
 let isRunning = false;
 let animationFrame = null;
 
